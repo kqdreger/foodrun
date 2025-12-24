@@ -9,33 +9,95 @@
 
 <ul class="order-items">
   <li class="order-items-header hide-on-expires">#1: Enter your order</li>
-  <%= render 'items/form' %>
+
+<%= render partial: "items/form", locals: { item: Item.new(order: @order), order: @order } %>
+  
   <li class="order-items-header">#2: View order summary</li>
-  <%= render @items %>
+  <%= turbo_stream_from @order %> 
+    <div id="items"> <%= render @order.items %></div>
 </ul>
 
 
 <footer class="footer">
-  <p><strong>Order #<%= @order.id %></strong> from FoodRun &mdash; Lunching made simple. <a href="/">New order?</a></p>
+  <p><strong>Order #<%= @order.id %></strong> from FoodRun &mdash; Lunching made simple. <a href="/">New order</a>?</p>
 </footer>
 
 <script type="text/javascript">
-  $(function() {
-    if(<%= @order.expired? %>) { expireForm(); }
-    $('#item_name').focus();
-    $(".order-time-remaining").countdown($('.order-time-remaining').data('expiresOn'))
-    .on('update.countdown', function(event) {
-      $(this).html(event.strftime('%M:%S remaining to place your order'));
-    })
-    .on('finish.countdown', function(event) {
-      expireForm();
-    })
-  });
 
-  function expireForm() {
-    $('#new_item, .hide-on-expires').hide();
-    $('.expired-message').show();
-    $('.order-time-remaining').html('00:00 remaining').addClass('expired');
+  
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if order is expired on load
+  if(<%= @order.expired? %>) { 
+    expireForm(); 
   }
+  
+  // Focus on item name input
+  const itemNameInput = document.getElementById('item_name');
+  if (itemNameInput) {
+    itemNameInput.focus();
+  }
+  
+  // Initialize countdown
+  const countdownElement = document.querySelector('.order-time-remaining');
+  if (countdownElement) {
+    const expiresOn = countdownElement.dataset.expiresOn;
+    initCountdown(countdownElement, expiresOn);
+  }
+});
+
+function initCountdown(element, expiresOn) {
+  const expiryTime = new Date(expiresOn).getTime();
+
+  // 1. Create a reusable function for the update logic
+  const updateTimer = () => {
+    const now = new Date().getTime();
+    const distance = expiryTime - now;
+
+    if (distance <= 0) {
+      clearInterval(countdownInterval);
+      expireForm();
+    } else {
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+      
+      const formattedMinutes = String(minutes).padStart(2, '0');
+      const formattedSeconds = String(seconds).padStart(2, '0');
+      
+      element.textContent = `${formattedMinutes}:${formattedSeconds} remaining to place your order`;
+    }
+  };
+
+  // 2. Call it IMMEDIATELY so the user sees the time right away
+  updateTimer();
+
+  // 3. Then start the interval as usual
+  const countdownInterval = setInterval(updateTimer, 1000);
+}
+
+function expireForm() {
+  // Hide new item form and other elements
+  const newItemForm = document.getElementById('new_item');
+  if (newItemForm) {
+    newItemForm.style.display = 'none';
+  }
+  
+  const hideOnExpires = document.querySelectorAll('.hide-on-expires');
+  hideOnExpires.forEach(function(element) {
+    element.style.display = 'none';
+  });
+  
+  // Show expired message
+  const expiredMessage = document.querySelector('.expired-message');
+  if (expiredMessage) {
+    expiredMessage.style.display = 'block';
+  }
+  
+  // Update countdown display
+  const countdown = document.querySelector('.order-time-remaining');
+  if (countdown) {
+    countdown.textContent = '00:00 remaining';
+    countdown.classList.add('expired');
+  }
+}
 
 </script>
