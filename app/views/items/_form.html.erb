@@ -1,6 +1,12 @@
-<%= form_for @item, remote: true do |f| %>
-  <%= f.text_field :name, :placeholder => "Name?", :autocomplete => "off" %>
-  <%= f.text_field :description, :placeholder => "What do you want?", :autocomplete => "off" %>
-  <%= f.hidden_field :order_id, :value => @order.id %>
-  <%= f.submit "Add it to the order!", :class => "button", data: { disable_with: "Creating order..." } %>
+<%# app/views/items/_form.html.erb %>
+
+<%# Remove the @ symbols from item and order %>
+<%= form_with model: item, id: "new_item_form" do |f| %>
+  <%= f.text_field :name, placeholder: "Name?", autocomplete: "off" %>
+  <%= f.text_field :description, placeholder: "What do you want?", autocomplete: "off" %>
+  
+  <%# Use order.id (local) instead of @order.id %>
+  <%= f.hidden_field :order_id, value: order.id %>
+  
+  <%= f.submit "Add it to the order!", class: "button", data: { disable_with: "Creating..." } %>
 <% end %>

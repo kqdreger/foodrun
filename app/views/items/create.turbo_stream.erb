@@ -1,0 +1,8 @@
+<%# app/views/items/create.turbo_stream.erb %>
+
+<%= turbo_stream.replace "new_item_form" do %>
+  <%# We pass a fresh Item.new so the form clears after success %>
+  <%= render partial: "items/form", locals: { item: Item.new(order_id: @item.order_id), order: @item.order } %>
+<% end %>
+
+<%= turbo_stream.append "items", partial: "items/item", locals: { item: @item } %>

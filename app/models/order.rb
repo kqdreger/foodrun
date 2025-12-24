@@ -1,5 +1,5 @@
-class Order < ActiveRecord::Base
-  UID_HEX_LENGTH = 24
+class Order < ApplicationRecord
+	  UID_HEX_LENGTH = 24
   has_many :items
   validates_presence_of :what
   before_create :generate_uid, :generate_expires_on
